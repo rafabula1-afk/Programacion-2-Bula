@@ -101,17 +101,30 @@ int encontrarMayor(int* arreglo, int tamanio, int mayor) {
     // - Buscar el número mayor en el arreglo
     // - Retornar el número mayor
     
-    return 0; // Placeholder
+    for (int i = 0; i < tamanio; i++) {
+        
+        mayor = arreglo[0];
+        
+        if(arreglo[i]>mayor){
+        	
+        	mayor = arreglo[i];
+		}
+        
+        
+    }
+    
+    return mayor; // Placeholder
 }
 
 // Función para calcular el promedio
-float calcularPromedio(int* arreglo, int tamanio) {
+float calcularPromedio(int* arreglo, int tamanio, float promedio) {
     // TODO: Implementar esta función
     // - Verificar que arreglo no sea nullptr y tamanio > 0
     // - Sumar todos los elementos
     // - Dividir por el tamaño
     // - Retornar el promedio
-    return 0.0f; // Placeholder
+    
+    return 0; // Placeholder
 }
 
 // Función para liberar la memoria del arreglo
