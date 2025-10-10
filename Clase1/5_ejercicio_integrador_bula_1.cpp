@@ -53,11 +53,11 @@
 #include <iomanip>
 using namespace std;
 
-// Función para crear un arreglo dinámico
+// Funcion para crear un arreglo dinamico
 int* crearArreglo(int tamanio) {
-    // TODO: Implementar esta función
+    // TODO: Implementar esta funcion 
     // - Validar que tamanio sea positivo
-    // - Crear arreglo dinámico con new
+    // - Crear arreglo dinomico con new
     // - Verificar que new no retorne nullptr
     // - Retornar puntero al arreglo
     
@@ -66,13 +66,14 @@ int* crearArreglo(int tamanio) {
 
 }
 
-// Función para llenar el arreglo con valores del usuario
+// Funcion para llenar el arreglo con valores del usuario
 void llenarArreglo(int* arreglo, int tamanio) {
-    // TODO: Implementar esta función
+    // TODO: Implementar esta funcion
     // - Verificar que arreglo no sea nullptr
     // - Pedir valores al usuario
     // - Llenar el arreglo con los valores ingresados
     
+    cout << "\n";
     cout << "Ingrese " << tamanio << " numeros:" << endl;
     for (int i = 0; i < tamanio; i++) {
         cout << "Elemento " << i << ": ";
@@ -80,26 +81,27 @@ void llenarArreglo(int* arreglo, int tamanio) {
         }
 }
 
-// Función para mostrar todos los elementos del arreglo
+// Funcion para mostrar todos los elementos del arreglo
 void mostrarArreglo(int* arreglo, int tamanio) {
-    // TODO: Implementar esta función
+    // TODO: Implementar esta funcion
     // - Verificar que arreglo no sea nullptr
     // - Mostrar todos los elementos del arreglo
-    // - Manejar caso de arreglo vacío
+    // - Manejar caso de arreglo vacio
     
-    cout << "Arreglo dinamico: ";
+    cout << "\n";
+    cout << "Arreglo dinamico: |";
     for (int i = 0; i < tamanio; i++) {
-        cout << arreglo[i] << " ";
+		cout << arreglo[i] << "|";
     }
     cout << endl;
 }
 
-// Función para encontrar el número mayor
+// Funcion para encontrar el numero mayor
 int encontrarMayor(int* arreglo, int tamanio, int mayor) {
-    // TODO: Implementar esta función
+    // TODO: Implementar esta funcion
     // - Verificar que arreglo no sea nullptr y tamanio > 0
-    // - Buscar el número mayor en el arreglo
-    // - Retornar el número mayor
+    // - Buscar el numero mayor en el arreglo
+    // - Retornar el numero mayor
     
     for (int i = 0; i < tamanio; i++) {
         
@@ -110,26 +112,34 @@ int encontrarMayor(int* arreglo, int tamanio, int mayor) {
         	mayor = arreglo[i];
 		}
         
-        
     }
     
     return mayor; // Placeholder
 }
 
-// Función para calcular el promedio
+// Funcion para calcular el promedio
 float calcularPromedio(int* arreglo, int tamanio, float promedio) {
-    // TODO: Implementar esta función
+    // TODO: Implementar esta funcion
     // - Verificar que arreglo no sea nullptr y tamanio > 0
     // - Sumar todos los elementos
-    // - Dividir por el tamaño
+    // - Dividir por el tamanio
     // - Retornar el promedio
     
-    return 0; // Placeholder
+    
+    for (int i = 0; i < tamanio; i++) {
+        
+        promedio = promedio + arreglo[i];
+        
+    }
+    
+    promedio = promedio / tamanio;
+    
+    return promedio; // Placeholder
 }
 
-// Función para liberar la memoria del arreglo
+// Funcion para liberar la memoria del arreglo
 void liberarArreglo(int*& arreglo) {
-    // TODO: Implementar esta función
+    // TODO: Implementar esta funcion
     // - Verificar que arreglo no sea nullptr
     // - Liberar memoria con delete[]
     // - Asignar nullptr al puntero
@@ -141,15 +151,15 @@ void liberarArreglo(int*& arreglo) {
     cout << "\n";
 }
 
-// Función para mostrar el menú
+// Funcion para mostrar el menú
 void mostrarMenu() {
-    cout << "\n=== GESTIÓN DE ARREGLOS DINÁMICOS ===" << endl;
+    cout << "\n=== GESTION DE ARREGLOS DINAMICOS ===" << endl;
     cout << "1. Crear y llenar arreglo" << endl;
     cout << "2. Mostrar arreglo" << endl;
-    cout << "3. Encontrar número mayor" << endl;
+    cout << "3. Encontrar numero mayor" << endl;
     cout << "4. Calcular promedio" << endl;
     cout << "5. Salir" << endl;
-    cout << "Seleccione una opción: ";
+    cout << "Seleccione una opcion: ";
 }
 
 int main() {
@@ -159,7 +169,7 @@ int main() {
     int* arreglo = nullptr;
     int tamanio = 0;
     
-    cout << "=== GESTIÓN DE ARREGLOS DINÁMICOS ===" << endl;
+    cout << "=== GESTION DE ARREGLOS DINAMICOS ===" << endl;
     cout << "Implemente las funciones marcadas con TODO para completar el ejercicio." << endl;
     
     int opcion;
@@ -170,14 +180,17 @@ int main() {
         switch (opcion) {
             case 1: {
                 // Crear y llenar arreglo
-                cout << "Ingrese el tamaño del arreglo: ";
+                cout << "\n";
+				cout << "Ingrese el tamanio del arreglo: ";
                 cin >> tamanio;
                 
                 arreglo = crearArreglo(tamanio);
                 if (arreglo != nullptr) {
                     llenarArreglo(arreglo, tamanio);
+                    cout << "\n";
                     cout << "Arreglo creado y llenado correctamente." << endl;
                 } else {
+                	cout << "\n";
                     cout << "Error al crear el arreglo." << endl;
                 }
                 break;
@@ -188,18 +201,21 @@ int main() {
                 if (arreglo != nullptr) {
                     mostrarArreglo(arreglo, tamanio);
                 } else {
-                    cout << "No hay arreglo creado. Use la opción 1 primero." << endl;
+                	cout << "\n";
+                    cout << "No hay arreglo creado. Use la opcion 1 primero." << endl;
                 }
                 break;
             }
             
             case 3: {
-                // Encontrar número mayor
+                // Encontrar numero mayor
                 if (arreglo != nullptr && tamanio > 0) {
                     int mayor = encontrarMayor(arreglo, tamanio, mayor);
-                    cout << "El número mayor es: " << mayor << endl;
+                    cout << "\n";
+                    cout << "El numero mayor es: " << mayor << endl;
                 } else {
-                    cout << "No hay arreglo creado o está vacío." << endl;
+                	cout << "\n";
+                    cout << "No hay arreglo creado o esta vacio." << endl;
                 }
                 break;
             }
@@ -207,21 +223,24 @@ int main() {
             case 4: {
                 // Calcular promedio
                 if (arreglo != nullptr && tamanio > 0) {
-                    float promedio = calcularPromedio(arreglo, tamanio);
+                    float promedio = calcularPromedio(arreglo, tamanio, promedio);
+                    cout << "\n";
                     cout << "El promedio es: " << fixed << setprecision(2) << promedio << endl;
                 } else {
-                    cout << "No hay arreglo creado o está vacío." << endl;
+                	cout << "\n";
+                    cout << "No hay arreglo creado o esta vacio." << endl;
                 }
                 break;
             }
             
             case 5: {
+            	cout << "\n";
                 cout << "Saliendo del programa..." << endl;
                 break;
             }
             
             default: {
-                cout << "Opción inválida. Intente nuevamente." << endl;
+                cout << "Opcion invalida. Intente nuevamente." << endl;
                 break;
             }
         }
@@ -230,6 +249,7 @@ int main() {
     // Liberar memoria antes de salir
     liberarArreglo(arreglo);
     
+    cout << "\n";
     cout << "Programa finalizado. Memoria liberada." << endl;
     return 0;
 }
