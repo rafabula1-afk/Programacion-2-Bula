@@ -178,7 +178,7 @@ Cita** obtenerCitasPorFecha(Hospital* hospital, const char* Fecha, int* cantidad
 void listarCitasPendientes(Hospital* hospital);
 bool verificarDisponibilidad(Hospital* hospital, int ID_doctor, const char* Fecha, const char* Hora);
 
-// INTERFAZ DE USUARIO
+// MODULO DE INTERFAZ DE USUARIO
 void mostrarMenuPrincipal();
 void mostrarMenuPacientes();
 void mostrarMenuDoctores();
@@ -472,82 +472,6 @@ char* copiarString(const char* origen){
 
 }
 
-/*
- * Copia un paciente en memoria dinámica
- */
-
-Paciente* copiarPaciente(Paciente* original){
-
-    if (original == nullptr) return nullptr;
-
-    // Crear nuevo paciente
-    Paciente* copia = new Paciente;
-
-    // Copiar datos simples (primitivos y arrays estáticos)
-    copia - >ID_paciente = original -> ID_paciente;
-    strncpy(copia -> Nombre_paciente, original-> Nombre_paciente, 49);
-    strncpy(copia -> Apellido_paciente, original -> Apellido_paciente, 49);
-    strncpy(copia -> Cedula_paciente, original -> Cedula_paciente, 19);
-    copia -> Edad = original -> Edad;
-    copia -> Sexo = original -> Sexo;
-    strncpy(copia -> Tipo_sangre, original -> Tipo_sangre, 4);
-    strncpy(copia -> Telefono_paciente, original -> Telefono_paciente, 14);
-    strncpy(copia -> Direccion_paciente, original -> Direccion_paciente, 99);
-    strncpy(copia -> Email_paciente, original -> Email_paciente, 49);
-    strncpy(copia -> Alergias, original -> Alergias, 499);
-    strncpy(copia -> Observaciones_generales, original -> Observaciones_generales, 499);
-    copia -> Activo = original -> Activo;
-
-    // Copiar cantidad y capacidad
-    copia -> Cantidad_consultas = original -> Cantidad_consultas;
-    copia -> Capacidad_consultas = original -> Capacidad_consultas;
-    copia -> Cantidad_citas_paciente = original -> Cantidad_citas_paciente;
-    copia -> Capacidad_citas_paciente = original -> Capacidad_citas_paciente;
-
-    // Crear nuevo array de historial médico (deep copy)
-    if (original -> historialesmedicos != nullptr && original -> Cantidad_consultas > 0){
-
-        copia -> historialesmedicos = new HistorialMedico[copia -> Capacidad_consultas];
-
-        for (int i = 0; i < original->Cantidad_consultas; i++){
-
-            // Copiar cada consulta individualmente
-            copia -> historialesmedicos[i].ID_consulta = original -> historialesmedicos[i].ID_consulta;
-            strncpy(copia -> historialesmedicos[i].Fecha, original -> historialesmedicos[i].Fecha, 10);
-            strncpy(copia -> historialesmedicos[i].Hora, original -> historialesmedicos[i].Hora, 5);
-            strncpy(copia -> historialesmedicos[i].Diagnostico, original -> historialesmedicos[i].Diagnostico, 199);
-            strncpy(copia -> historialesmedicos[i].Tratamiento_preescrito, original -> historialesmedicos[i].Tratamiento_preescrito, 199);
-            strncpy(copia -> historialesmedicos[i].Medicamentos_recetados, original -> historialesmedicos[i].Medicamentos_recetados, 149);
-            copia -> historialesmedicos[i].ID_doctor = original -> historialesmedicos[i].ID_doctor;
-            copia -> historialesmedicos[i].Costo_consulta = original -> historialesmedicos[i].Costo_consulta;
-        }
-
-    } else{
-
-        copia -> historialesmedicos = nullptr;
-
-    }
-
-    // Crear nuevo array de citas agendadas (deep copy)
-    if (original -> Citas_agendadas != nullptr && original -> Cantidad_citas_paciente > 0){
-
-        copia -> Citas_agendadas = new int[copia -> Capacidad_citas_paciente];
-
-        for (int i = 0; i < original -> Cantidad_citas_paciente; i++){
-
-            copia -> Citas_agendadas[i] = original -> Citas_agendadas[i];
-
-        }
-
-    } else{
-
-        copia -> Citas_agendadas = nullptr;
-
-    }
-
-    return copia;
-
-}
 
 // =============================================================================
 // FUNCIÓN AUXILIAR LIMPIAR BUFFER
