@@ -892,3 +892,657 @@ void listarCitasPendientes(Hospital* hospital) {
     
     cout << "+-----------------------------------------------------------------------------+" << endl;
 }
+
+// =============================================================================
+// IMPLEMENTACION DE MODULO HISTORIAL MEDICO
+// =============================================================================
+
+bool agregarConsultaAlHistorial(Hospital* hospital, HistorialMedico* consulta) {
+    // Configurar datos de la consulta
+    consulta->id = hospital->siguienteIDConsulta++;
+    consulta->eliminado = false;
+    time(&consulta->fechaRegistro);
+    
+    // Abrir archivo y agregar consulta
+    ofstream archivo("historiales.bin", ios::binary | ios::app);
+    if (!archivo.is_open()) {
+        cout << "Error: No se pudo abrir el archivo de historiales." << endl;
+        return false;
+    }
+    
+    archivo.write((char*)consulta, sizeof(HistorialMedico));
+    archivo.close();
+    
+    // Actualizar header
+    ArchivoHeader header = leerHeader("historiales.bin");
+    header.cantidadRegistros++;
+    header.registrosActivos++;
+    header.proximoID = hospital->siguienteIDConsulta;
+    actualizarHeader("historiales.bin", header);
+    
+    // Actualizar estadisticas del hospital
+    hospital->totalConsultasRealizadas++;
+    actualizarDatosHospital(hospital);
+    
+    return true;
+}
+
+void mostrarHistorialMedico(Hospital* hospital, int pacienteID) {
+    ArchivoHeader header = leerHeader("historiales.bin");
+    ifstream archivo("historiales.bin", ios::binary);
+    
+    if (!archivo.is_open()) {
+        cout << "Error: No se pudo abrir el archivo de historiales." << endl;
+        return;
+    }
+    
+    // Buscar paciente para mostrar su nombre
+    Paciente* paciente = buscarPacientePorID(hospital, pacienteID);
+    if (paciente == nullptr) {
+        cout << "Paciente no encontrado." << endl;
+        return;
+    }
+    
+    cout << "\n+----------------------------------------------------------------------------------+" << endl;
+    cout << "¦                         HISTORIAL MEDICO - " << paciente->nombre << " " << paciente->apellido << setw(25) << "¦" << endl;
+    cout << "¦---------------------------------------------------------------------------------¦" << endl;
+    cout << "¦ FECHA     ¦ HORA  ¦ DOCTOR ¦ DIAGNOSTICO                                      ¦" << endl;
+    cout << "¦-----------+-------+--------+--------------------------------------------------¦" << endl;
+    
+    archivo.seekg(sizeof(ArchivoHeader));
+    HistorialMedico consulta;
+    int contador = 0;
+    
+    for (int i = 0; i < header.cantidadRegistros; i++) {
+        archivo.read((char*)&consulta, sizeof(HistorialMedico));
+        if (!consulta.eliminado && consulta.pacienteID == pacienteID) {
+            cout << "¦ " << setw(9) << consulta.fecha << " ¦ "
+                 << setw(5) << consulta.hora << " ¦ "
+                 << setw(6) << consulta.doctorID << " ¦ "
+                 << setw(48) << left << consulta.diagnostico << "¦" << endl;
+            contador++;
+        }
+    }
+    
+    archivo.close();
+    delete paciente;
+    
+    if (contador == 0) {
+        cout << "¦               NO HAY CONSULTAS REGISTRADAS               ¦" << endl;
+    }
+    
+    cout << "+---------------------------------------------------------------------------------+" << endl;
+}
+
+// =============================================================================
+// IMPLEMENTACION DE UTILIDADES
+// =============================================================================
+
+bool validarFecha(const char* fecha) {
+    if (strlen(fecha) != 10) return false;
+    if (fecha[4] != '-' || fecha[7] != '-') return false;
+    
+    int anio, mes, dia;
+    if (sscanf(fecha, "%d-%d-%d", &anio, &mes, &dia) != 3) return false;
+    
+    if (anio < 1900 || anio > 2025) return false;
+    if (mes < 1 || mes > 12) return false;
+    if (dia < 1 || dia > 31) return false;
+    
+    if (mes == 2) {
+        bool bisiesto = (anio % 4 == 0 && anio % 100 != 0) || (anio % 400 == 0);
+        if (bisiesto && dia > 29) return false;
+        if (!bisiesto && dia > 28) return false;
+    } else if ((mes == 4 || mes == 6 || mes == 9 || mes == 11) && dia > 30) {
+        return false;
+    }
+    
+    return true;
+}
+
+bool validarHora(const char* hora) {
+    if (strlen(hora) != 5) return false;
+    if (hora[2] != ':') return false;
+    
+    int hh, mm;
+    if (sscanf(hora, "%d:%d", &hh, &mm) != 2) return false;
+    
+    return (hh >= 0 && hh <= 23) && (mm >= 0 && mm <= 59);
+}
+
+bool validarCedula(const char* cedula) {
+    return cedula != nullptr && strlen(cedula) > 0 && strlen(cedula) <= 20;
+}
+
+bool validarEmail(const char* email) {
+    if (email == nullptr) return false;
+    
+    bool tieneArroba = false;
+    bool tienePunto = false;
+    
+    for (int i = 0; email[i] != '\0'; i++) {
+        if (email[i] == '@') tieneArroba = true;
+        if (email[i] == '.' && tieneArroba) tienePunto = true;
+    }
+    
+    return tieneArroba && tienePunto;
+}
+
+void limpiarBuffer() {
+    cin.clear();
+    cin.ignore(10000, '\n');
+}
+
+// =============================================================================
+// IMPLEMENTACION DE INTERFAZ DE USUARIO
+// =============================================================================
+
+void mostrarMenuPrincipal() {
+    cout << "\n╔════════════════════════════════════════╗" << endl;
+    cout << "║   SISTEMA DE GESTION HOSPITALARIA v2   ║" << endl;
+    cout << "║         (Persistencia con Archivos)    ║" << endl;
+    cout << "╚════════════════════════════════════════╝" << endl;
+    cout << "1. Gestion de Pacientes" << endl;
+    cout << "2. Gestion de Doctores" << endl;
+    cout << "3. Gestion de Citas" << endl;
+    cout << "4. Consultas y Reportes" << endl;
+    cout << "5. Mantenimiento de Archivos" << endl;
+    cout << "6. Guardar y Salir" << endl;
+    cout << "Seleccione una opcion: ";
+}
+
+void mostrarMenuPacientes() {
+    cout << "\n+------------------------------------------------------------+" << endl;
+    cout << "¦                   GESTION DE PACIENTES                    ¦" << endl;
+    cout << "¦------------------------------------------------------------¦" << endl;
+    cout << "¦ 1. Registrar nuevo paciente                               ¦" << endl;
+    cout << "¦ 2. Buscar paciente por cedula                             ¦" << endl;
+    cout << "¦ 3. Buscar paciente por nombre                             ¦" << endl;
+    cout << "¦ 4. Actualizar datos de paciente                           ¦" << endl;
+    cout << "¦ 5. Eliminar paciente                                      ¦" << endl;
+    cout << "¦ 6. Listar todos los pacientes                             ¦" << endl;
+    cout << "¦ 7. Ver historial medico                                   ¦" << endl;
+    cout << "¦ 8. Volver al menu principal                               ¦" << endl;
+    cout << "+------------------------------------------------------------+" << endl;
+    cout << "Seleccione una opcion: ";
+}
+
+void mostrarMenuDoctores() {
+    cout << "\n+------------------------------------------------------------+" << endl;
+    cout << "¦                    GESTION DE DOCTORES                    ¦" << endl;
+    cout << "¦------------------------------------------------------------¦" << endl;
+    cout << "¦ 1. Registrar nuevo doctor                                 ¦" << endl;
+    cout << "¦ 2. Buscar doctor por ID                                   ¦" << endl;
+    cout << "¦ 3. Buscar doctores por especialidad                       ¦" << endl;
+    cout << "¦ 4. Asignar paciente a doctor                              ¦" << endl;
+    cout << "¦ 5. Listar pacientes de doctor                             ¦" << endl;
+    cout << "¦ 6. Listar todos los doctores                              ¦" << endl;
+    cout << "¦ 7. Eliminar doctor                                        ¦" << endl;
+    cout << "¦ 8. Volver al menu principal                               ¦" << endl;
+    cout << "+------------------------------------------------------------+" << endl;
+    cout << "Seleccione una opcion: ";
+}
+
+void mostrarMenuCitas() {
+    cout << "\n+------------------------------------------------------------+" << endl;
+    cout << "¦                     GESTION DE CITAS                      ¦" << endl;
+    cout << "¦------------------------------------------------------------¦" << endl;
+    cout << "¦ 1. Agendar nueva cita                                     ¦" << endl;
+    cout << "¦ 2. Cancelar cita                                          ¦" << endl;
+    cout << "¦ 3. Atender cita                                           ¦" << endl;
+    cout << "¦ 4. Buscar citas por paciente                              ¦" << endl;
+    cout << "¦ 5. Buscar citas por doctor                                ¦" << endl;
+    cout << "¦ 6. Buscar citas por fecha                                 ¦" << endl;
+    cout << "¦ 7. Listar citas pendientes                                ¦" << endl;
+    cout << "¦ 8. Verificar disponibilidad                               ¦" << endl;
+    cout << "¦ 9. Volver al menu principal                               ¦" << endl;
+    cout << "+------------------------------------------------------------+" << endl;
+    cout << "Seleccione una opcion: ";
+}
+
+void mostrarMenuMantenimiento() {
+    cout << "\n+------------------------------------------------------------+" << endl;
+    cout << "¦                 MANTENIMIENTO DE ARCHIVOS                 ¦" << endl;
+    cout << "¦------------------------------------------------------------¦" << endl;
+    cout << "¦ 1. Verificar integridad de archivos                       ¦" << endl;
+    cout << "¦ 2. Compactar archivos (eliminar registros borrados)       ¦" << endl;
+    cout << "¦ 3. Hacer respaldo de datos                                ¦" << endl;
+    cout << "¦ 4. Restaurar desde respaldo                               ¦" << endl;
+    cout << "¦ 5. Estadisticas de uso de archivos                        ¦" << endl;
+    cout << "¦ 6. Volver al menu principal                               ¦" << endl;
+    cout << "+------------------------------------------------------------+" << endl;
+    cout << "Seleccione una opcion: ";
+}
+
+void ejecutarMenuPacientes(Hospital* hospital) {
+    int opcion;
+    char input[200];
+    
+    do {
+        mostrarMenuPacientes();
+        cin >> opcion;
+        limpiarBuffer();
+        
+        switch (opcion) {
+            case 1: {
+                // Registrar nuevo paciente
+                Paciente nuevoPaciente;
+                
+                cout << "Nombre: ";
+                cin.getline(nuevoPaciente.nombre, 50);
+                cout << "Apellido: ";
+                cin.getline(nuevoPaciente.apellido, 50);
+                cout << "Cedula: ";
+                cin.getline(nuevoPaciente.cedula, 20);
+                cout << "Edad: ";
+                cin >> nuevoPaciente.edad;
+                cout << "Sexo (M/F): ";
+                cin >> nuevoPaciente.sexo;
+                limpiarBuffer();
+                cout << "Telefono: ";
+                cin.getline(nuevoPaciente.telefono, 15);
+                cout << "Direccion: ";
+                cin.getline(nuevoPaciente.direccion, 100);
+                cout << "Email: ";
+                cin.getline(nuevoPaciente.email, 50);
+                cout << "Tipo de Sangre: ";
+                cin.getline(nuevoPaciente.tipoSangre, 5);
+                cout << "Alergias: ";
+                cin.getline(nuevoPaciente.alergias, 500);
+                cout << "Observaciones: ";
+                cin.getline(nuevoPaciente.observaciones, 500);
+                
+                if (agregarPaciente(hospital, &nuevoPaciente)) {
+                    cout << "Paciente registrado exitosamente." << endl;
+                }
+                break;
+            }
+            
+            case 2: {
+                // Buscar por cedula
+                cout << "Cedula: ";
+                cin.getline(input, 20);
+                
+                Paciente* paciente = buscarPacientePorCedula(hospital, input);
+                if (paciente != nullptr) {
+                    cout << "\nPaciente encontrado:" << endl;
+                    cout << "ID: " << paciente->id << endl;
+                    cout << "Nombre: " << paciente->nombre << " " << paciente->apellido << endl;
+                    cout << "Edad: " << paciente->edad << endl;
+                    cout << "Telefono: " << paciente->telefono << endl;
+                    cout << "Email: " << paciente->email << endl;
+                    delete paciente;
+                } else {
+                    cout << "Paciente no encontrado." << endl;
+                }
+                break;
+            }
+            
+            case 3: {
+                // Buscar por nombre
+                cout << "Nombre: ";
+                cin.getline(input, 100);
+                
+                int cantidad;
+                Paciente** resultados = buscarPacientesPorNombre(hospital, input, &cantidad);
+                
+                if (resultados != nullptr) {
+                    cout << "Se encontraron " << cantidad << " pacientes:" << endl;
+                    for (int i = 0; i < cantidad; i++) {
+                        cout << i+1 << ". " << resultados[i]->nombre << " " << resultados[i]->apellido 
+                             << " (Cedula: " << resultados[i]->cedula << ")" << endl;
+                        delete resultados[i];
+                    }
+                    delete[] resultados;
+                } else {
+                    cout << "No se encontraron pacientes." << endl;
+                }
+                break;
+            }
+            
+            case 4: {
+                // Actualizar paciente
+                int id;
+                cout << "ID del paciente a actualizar: ";
+                cin >> id;
+                limpiarBuffer();
+                
+                Paciente* paciente = buscarPacientePorID(hospital, id);
+                if (paciente != nullptr) {
+                    cout << "Nuevo telefono (" << paciente->telefono << "): ";
+                    cin.getline(input, 15);
+                    if (strlen(input) > 0) {
+                        strcpy(paciente->telefono, input);
+                    }
+                    
+                    cout << "Nueva direccion (" << paciente->direccion << "): ";
+                    cin.getline(input, 100);
+                    if (strlen(input) > 0) {
+                        strcpy(paciente->direccion, input);
+                    }
+                    
+                    cout << "Nuevo email (" << paciente->email << "): ";
+                    cin.getline(input, 50);
+                    if (strlen(input) > 0 && validarEmail(input)) {
+                        strcpy(paciente->email, input);
+                    }
+                    
+                    if (actualizarPaciente(paciente)) {
+                        cout << "Paciente actualizado correctamente." << endl;
+                    }
+                    delete paciente;
+                } else {
+                    cout << "Paciente no encontrado." << endl;
+                }
+                break;
+            }
+            
+            case 5: {
+                // Eliminar paciente (borrado logico)
+                int id;
+                cout << "ID del paciente a eliminar: ";
+                cin >> id;
+                limpiarBuffer();
+                
+                Paciente* paciente = buscarPacientePorID(hospital, id);
+                if (paciente != nullptr) {
+                    paciente->eliminado = true;
+                    paciente->activo = false;
+                    if (actualizarPaciente(paciente)) {
+                        cout << "Paciente eliminado correctamente." << endl;
+                        
+                        // Actualizar header
+                        ArchivoHeader header = leerHeader("pacientes.bin");
+                        header.registrosActivos--;
+                        actualizarHeader("pacientes.bin", header);
+                    }
+                    delete paciente;
+                } else {
+                    cout << "Paciente no encontrado." << endl;
+                }
+                break;
+            }
+            
+            case 6: {
+                // Listar pacientes
+                listarTodosPacientes(hospital);
+                break;
+            }
+            
+            case 7: {
+                // Ver historial medico
+                int id;
+                cout << "ID del paciente: ";
+                cin >> id;
+                limpiarBuffer();
+                
+                mostrarHistorialMedico(hospital, id);
+                break;
+            }
+            
+            case 8: {
+                cout << "Volviendo al menu principal..." << endl;
+                break;
+            }
+            
+            default: {
+                cout << "Opcion invalida." << endl;
+            }
+        }
+        
+    } while (opcion != 8);
+}
+
+void ejecutarMenuDoctores(Hospital* hospital) {
+    int opcion;
+    char input[200];
+    
+    do {
+        mostrarMenuDoctores();
+        cin >> opcion;
+        limpiarBuffer();
+        
+        switch (opcion) {
+            case 1: {
+                // Registrar nuevo doctor
+                Doctor nuevoDoctor;
+                
+                cout << "Nombre: ";
+                cin.getline(nuevoDoctor.nombre, 50);
+                cout << "Apellido: ";
+                cin.getline(nuevoDoctor.apellido, 50);
+                cout << "Cedula profesional: ";
+                cin.getline(nuevoDoctor.cedulaProfesional, 20);
+                cout << "Especialidad: ";
+                cin.getline(nuevoDoctor.especialidad, 50);
+                cout << "Anios de experiencia: ";
+                cin >> nuevoDoctor.aniosExperiencia;
+                cout << "Costo de consulta: ";
+                cin >> nuevoDoctor.costoConsulta;
+                limpiarBuffer();
+                cout << "Horario de atencion: ";
+                cin.getline(nuevoDoctor.horarioAtencion, 50);
+                cout << "Telefono: ";
+                cin.getline(nuevoDoctor.telefono, 15);
+                cout << "Email: ";
+                cin.getline(nuevoDoctor.email, 50);
+                
+                if (agregarDoctor(hospital, &nuevoDoctor)) {
+                    cout << "Doctor registrado exitosamente." << endl;
+                }
+                break;
+            }
+            
+            case 2: {
+                // Buscar doctor por ID
+                int id;
+                cout << "ID del doctor: ";
+                cin >> id;
+                limpiarBuffer();
+                
+                Doctor* doctor = buscarDoctorPorID(hospital, id);
+                if (doctor != nullptr) {
+                    cout << "\nDoctor encontrado:" << endl;
+                    cout << "Nombre: " << doctor->nombre << " " << doctor->apellido << endl;
+                    cout << "Especialidad: " << doctor->especialidad << endl;
+                    cout << "Experiencia: " << doctor->aniosExperiencia << " anios" << endl;
+                    cout << "Costo: $" << doctor->costoConsulta << endl;
+                    cout << "Telefono: " << doctor->telefono << endl;
+                    delete doctor;
+                } else {
+                    cout << "Doctor no encontrado." << endl;
+                }
+                break;
+            }
+            
+            case 6: {
+                // Listar doctores
+                listarTodosDoctores(hospital);
+                break;
+            }
+            
+            case 8: {
+                cout << "Volviendo al menu principal..." << endl;
+                break;
+            }
+            
+            default: {
+                cout << "Opcion no implementada en esta version." << endl;
+            }
+        }
+        
+    } while (opcion != 8);
+}
+
+void ejecutarMenuCitas(Hospital* hospital) {
+    int opcion;
+    char input[200];
+    
+    do {
+        mostrarMenuCitas();
+        cin >> opcion;
+        limpiarBuffer();
+        
+        switch (opcion) {
+            case 1: {
+                // Agendar nueva cita
+                Cita nuevaCita;
+                
+                cout << "ID del paciente: ";
+                cin >> nuevaCita.pacienteID;
+                cout << "ID del doctor: ";
+                cin >> nuevaCita.doctorID;
+                limpiarBuffer();
+                
+                cout << "Fecha (YYYY-MM-DD): ";
+                cin.getline(nuevaCita.fecha, 11);
+                cout << "Hora (HH:MM): ";
+                cin.getline(nuevaCita.hora, 6);
+                cout << "Motivo: ";
+                cin.getline(nuevaCita.motivo, 150);
+                
+                if (agendarCita(hospital, &nuevaCita)) {
+                    cout << "Cita agendada exitosamente." << endl;
+                }
+                break;
+            }
+            
+            case 7: {
+                // Listar citas pendientes
+                listarCitasPendientes(hospital);
+                break;
+            }
+            
+            case 9: {
+                cout << "Volviendo al menu principal..." << endl;
+                break;
+            }
+            
+            default: {
+                cout << "Opcion no implementada en esta version." << endl;
+            }
+        }
+        
+    } while (opcion != 9);
+}
+
+void ejecutarMenuMantenimiento(Hospital* hospital) {
+    int opcion;
+    
+    do {
+        mostrarMenuMantenimiento();
+        cin >> opcion;
+        limpiarBuffer();
+        
+        switch (opcion) {
+            case 1: {
+                // Verificar integridad de archivos
+                const char* archivos[] = {
+                    "hospital.bin", "pacientes.bin", "doctores.bin", 
+                    "citas.bin", "historiales.bin"
+                };
+                
+                cout << "\nVerificando integridad de archivos..." << endl;
+                for (int i = 0; i < 5; i++) {
+                    if (verificarArchivo(archivos[i])) {
+                        ArchivoHeader header = leerHeader(archivos[i]);
+                        cout << "✓ " << archivos[i] << " - " << header.registrosActivos 
+                             << "/" << header.cantidadRegistros << " registros activos" << endl;
+                    } else {
+                        cout << "✗ " << archivos[i] << " - CORRUPTO O NO EXISTE" << endl;
+                    }
+                }
+                break;
+            }
+            
+            case 5: {
+                // Estadisticas de uso
+                cout << "\nESTADISTICAS DEL SISTEMA:" << endl;
+                cout << "Total pacientes registrados: " << hospital->totalPacientesRegistrados << endl;
+                cout << "Total doctores registrados: " << hospital->totalDoctoresRegistrados << endl;
+                cout << "Total citas agendadas: " << hospital->totalCitasAgendadas << endl;
+                cout << "Total consultas realizadas: " << hospital->totalConsultasRealizadas << endl;
+                
+                ArchivoHeader headerPac = leerHeader("pacientes.bin");
+                ArchivoHeader headerDoc = leerHeader("doctores.bin");
+                ArchivoHeader headerCitas = leerHeader("citas.bin");
+                ArchivoHeader headerHist = leerHeader("historiales.bin");
+                
+                cout << "\nESTADISTICAS DE ARCHIVOS:" << endl;
+                cout << "Pacientes: " << headerPac.registrosActivos << " activos de " << headerPac.cantidadRegistros << endl;
+                cout << "Doctores: " << headerDoc.registrosActivos << " activos de " << headerDoc.cantidadRegistros << endl;
+                cout << "Citas: " << headerCitas.registrosActivos << " activos de " << headerCitas.cantidadRegistros << endl;
+                cout << "Historiales: " << headerHist.registrosActivos << " activos de " << headerHist.cantidadRegistros << endl;
+                break;
+            }
+            
+            case 6: {
+                cout << "Volviendo al menu principal..." << endl;
+                break;
+            }
+            
+            default: {
+                cout << "Opcion no implementada en esta version." << endl;
+            }
+        }
+        
+    } while (opcion != 6);
+}
+
+// =============================================================================
+// FUNCION PRINCIPAL
+// =============================================================================
+
+int main() {
+    cout << "Inicializando Sistema de Gestion Hospitalaria v2..." << endl;
+    cout << "(Sistema de persistencia con archivos binarios)" << endl;
+    
+    // Cargar datos del hospital
+    Hospital* hospital = cargarDatosHospital();
+    if (hospital == nullptr) {
+        cout << "Error: No se pudo inicializar el sistema." << endl;
+        return 1;
+    }
+    
+    cout << "Hospital: " << hospital->nombre << endl;
+    cout << "Sistema cargado correctamente." << endl;
+    
+    // Menu principal
+    int opcion;
+    do {
+        mostrarMenuPrincipal();
+        cin >> opcion;
+        limpiarBuffer();
+        
+        switch (opcion) {
+            case 1:
+                ejecutarMenuPacientes(hospital);
+                break;
+            case 2:
+                ejecutarMenuDoctores(hospital);
+                break;
+            case 3:
+                ejecutarMenuCitas(hospital);
+                break;
+            case 4:
+                cout << "Modulo de consultas y reportes en desarrollo." << endl;
+                break;
+            case 5:
+                ejecutarMenuMantenimiento(hospital);
+                break;
+            case 6:
+                cout << "Guardando datos y saliendo..." << endl;
+                break;
+            default:
+                cout << "Opcion invalida." << endl;
+        }
+        
+    } while (opcion != 6);
+    
+    // Guardar datos y liberar memoria
+    guardarDatosHospital(hospital);
+    delete hospital;
+    
+    cout << "Sistema cerrado correctamente. ¡Hasta pronto!" << endl;
+    return 0;
+}
