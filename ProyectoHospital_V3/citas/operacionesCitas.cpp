@@ -90,7 +90,7 @@ void cancelarCita() {
     }
 
     if (cita.estaAtendida()) {
-        cout << "\n✗ No se puede cancelar una cita ya atendida." << endl;
+        cout << "\nNo se puede cancelar una cita ya atendida." << endl;
         return;
     }
 
@@ -148,7 +148,7 @@ void atenderCita() {
     }
 
     if (cita.estaCancelada()) {
-        cout << "\n✗ Esta cita está cancelada, no se puede atender." << endl;
+        cout << "\nEsta cita está cancelada, no se puede atender." << endl;
         return;
     }
     

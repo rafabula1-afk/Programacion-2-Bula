@@ -12,7 +12,7 @@
 
 using namespace std;
 
-// ============ FUNCIONES DE GESTIÓN DE CITAS ============
+//Funciones de Gestion de Citas
 void agendarCita(Hospital& hospital);
 void cancelarCita();
 void atenderCita();
@@ -22,9 +22,9 @@ void buscarCitasPorFecha();
 void listarCitasPendientes();
 void verificarDisponibilidad();
 
-// ============ FUNCIONES AUXILIARES ============
+//Funciones Auxiliares
 void mostrarMenuCitas(Hospital& hospital);
 bool pedirDatosCita(Cita& cita, Hospital& hospital, bool esModificacion = false);
 void mostrarCitaEncontrada(const Cita& cita);
 
-#endif // OPERACIONESCITAS_HPP
+#endif

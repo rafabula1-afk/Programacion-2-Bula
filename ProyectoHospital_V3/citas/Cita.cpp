@@ -6,7 +6,7 @@
 
 using namespace std;
 
-// ============ CONSTRUCTORES ============
+//Constructores
 Cita::Cita() {
     id = 0;
     pacienteID = -1;
@@ -58,12 +58,10 @@ Cita::Cita(const Cita& otro) {
     fechaModificacion = otro.fechaModificacion;
 }
 
-// ============ DESTRUCTOR ============
-Cita::~Cita() {
-    // No hay memoria dinámica que liberar
-}
+//Destructor
+Cita::~Cita() {}
 
-// ============ GETTERS ============
+//Getters
 int Cita::getId() const { return id; }
 int Cita::getPacienteID() const { return pacienteID; }
 int Cita::getDoctorID() const { return doctorID; }
@@ -78,7 +76,7 @@ bool Cita::isEliminado() const { return eliminado; }
 time_t Cita::getFechaCreacion() const { return fechaCreacion; }
 time_t Cita::getFechaModificacion() const { return fechaModificacion; }
 
-// ============ SETTERS ============
+//Setters
 void Cita::setId(int id) { this->id = id; }
 
 void Cita::setPacienteID(int pacienteID) {
@@ -154,7 +152,7 @@ void Cita::setFechaModificacion(time_t fecha) {
     this->fechaModificacion = fecha;
 }
 
-// ============ MÉTODOS DE VALIDACIÓN ============
+//Metodos de Validacion
 bool Cita::validarDatos() const {
     return pacienteID > 0 && doctorID > 0 && 
            strlen(fecha) == 10 && strlen(hora) == 5 &&
@@ -162,29 +160,24 @@ bool Cita::validarDatos() const {
 }
 
 bool Cita::fechaHoraValidas() const {
-    // Validar formato fecha: YYYY-MM-DD
     if (strlen(fecha) != 10) return false;
     if (fecha[4] != '-' || fecha[7] != '-') return false;
-    
-    // Validar formato hora: HH:MM
+
     if (strlen(hora) != 5) return false;
     if (hora[2] != ':') return false;
-    
-    // Extraer componentes
+
     int anio, mes, dia;
     int horaInt, minuto;
     
     if (sscanf(fecha, "%d-%d-%d", &anio, &mes, &dia) != 3) return false;
     if (sscanf(hora, "%d:%d", &horaInt, &minuto) != 2) return false;
-    
-    // Validar rangos
+
     if (anio < 2023 || anio > 2030) return false;
     if (mes < 1 || mes > 12) return false;
     if (dia < 1 || dia > 31) return false;
     if (horaInt < 0 || horaInt > 23) return false;
     if (minuto < 0 || minuto > 59) return false;
-    
-    // Validar días por mes
+
     if (mes == 2) {
         bool bisiesto = (anio % 4 == 0 && anio % 100 != 0) || (anio % 400 == 0);
         if (bisiesto && dia > 29) return false;
@@ -197,11 +190,10 @@ bool Cita::fechaHoraValidas() const {
 }
 
 bool Cita::pacienteYDoctorExisten() const {
-    // Esta validación se hará en el contexto del sistema
     return pacienteID > 0 && doctorID > 0;
 }
 
-// ============ MÉTODOS DE GESTIÓN ============
+//Metodos de Gestion
 void Cita::marcarComoAtendida() {
     atendida = true;
     strcpy(estado, "Atendida");
@@ -235,9 +227,9 @@ bool Cita::estaAtendida() const {
     return strcmp(estado, "Atendida") == 0;
 }
 
-// ============ MÉTODOS DE PRESENTACIÓN ============
+//Metodos de Presentacion
 void Cita::mostrarInformacionBasica() const {
-    cout << "\n=== INFORMACIÓN BÁSICA DE LA CITA ===" << endl;
+    cout << "\n=== INFORMACION BÁSICA DE LA CITA ===" << endl;
     cout << "ID: " << id << endl;
     cout << "Paciente ID: " << pacienteID << endl;
     cout << "Doctor ID: " << doctorID << endl;
@@ -245,11 +237,11 @@ void Cita::mostrarInformacionBasica() const {
     cout << "Hora: " << hora << endl;
     cout << "Motivo: " << motivo << endl;
     cout << "Estado: " << estado << endl;
-    cout << "Atendida: " << (atendida ? "Sí" : "No") << endl;
+    cout << "Atendida: " << (atendida ? "Si" : "No") << endl;
 }
 
 void Cita::mostrarInformacionCompleta() const {
-    cout << "\n=== INFORMACIÓN COMPLETA DE LA CITA ===" << endl;
+    cout << "\n=== INFORMACION COMPLETA DE LA CITA ===" << endl;
     cout << "ID: " << id << endl;
     cout << "Paciente ID: " << pacienteID << endl;
     cout << "Doctor ID: " << doctorID << endl;
@@ -258,16 +250,16 @@ void Cita::mostrarInformacionCompleta() const {
     cout << "Motivo: " << motivo << endl;
     cout << "Estado: " << estado << endl;
     cout << "Observaciones: " << observaciones << endl;
-    cout << "Atendida: " << (atendida ? "Sí" : "No") << endl;
+    cout << "Atendida: " << (atendida ? "Si" : "No") << endl;
     cout << "Consulta ID asociada: " << (consultaID > 0 ? to_string(consultaID) : "Ninguna") << endl;
     char buffer[26];
     ctime_r(&fechaCreacion, buffer);
-    cout << "Fecha de creación: " << buffer;
+    cout << "Fecha de creacion: " << buffer;
     ctime_r(&fechaModificacion, buffer);
     cout << "Última modificación: " << buffer;
 }
 
-// ============ OPERADORES ============
+//Operadores
 Cita& Cita::operator=(const Cita& otro) {
     if (this != &otro) {
         id = otro.id;
@@ -287,7 +279,7 @@ Cita& Cita::operator=(const Cita& otro) {
     return *this;
 }
 
-// ============ MÉTODO ESTÁTICO ============
-size_t Cita::obtenerTamano() {
+//Metodo Estatico
+size_t Cita::obtenerTamanio() {
     return sizeof(Cita);
 }

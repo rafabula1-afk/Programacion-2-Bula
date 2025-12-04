@@ -5,7 +5,9 @@
 #include <ctime>
 
 class Cita {
+
 private:
+
     int id;
     int pacienteID;
     int doctorID;
@@ -23,15 +25,16 @@ private:
     time_t fechaModificacion;
     
 public:
-    // ============ CONSTRUCTORES ============
+
+    //Constructores
     Cita();
     Cita(int id, int pacienteID, int doctorID, const char* fecha, const char* hora, const char* motivo);
     Cita(const Cita& otro);
     
-    // ============ DESTRUCTOR ============
+    //Destructor
     ~Cita();
     
-    // ============ GETTERS ============
+    //Getters
     int getId() const;
     int getPacienteID() const;
     int getDoctorID() const;
@@ -46,7 +49,7 @@ public:
     time_t getFechaCreacion() const;
     time_t getFechaModificacion() const;
     
-    // ============ SETTERS ============
+    //Setters
     void setId(int id);
     void setPacienteID(int pacienteID);
     void setDoctorID(int doctorID);
@@ -61,12 +64,12 @@ public:
     void setFechaCreacion(time_t fecha);
     void setFechaModificacion(time_t fecha);
     
-    // ============ MÉTODOS DE VALIDACIÓN ============
+    //Metodos de Validacion
     bool validarDatos() const;
     bool fechaHoraValidas() const;
     bool pacienteYDoctorExisten() const;
     
-    // ============ MÉTODOS DE GESTIÓN ============
+    //Metodos de Gestion
     void marcarComoAtendida();
     void cancelar();
     void reprogramar(const char* nuevaFecha, const char* nuevaHora);
@@ -74,15 +77,15 @@ public:
     bool estaCancelada() const;
     bool estaAtendida() const;
     
-    // ============ MÉTODOS DE PRESENTACIÓN ============
+    //Metodos de Presentacion
     void mostrarInformacionBasica() const;
     void mostrarInformacionCompleta() const;
     
-    // ============ OPERADORES ============
+    //Operadores
     Cita& operator=(const Cita& otro);
     
-    // ============ MÉTODO ESTÁTICO ============
-    static size_t obtenerTamano();
+    //Metodo Estatico
+    static size_t obtenerTamanio();
 };
 
-#endif // CITA_HPP
+#endif
